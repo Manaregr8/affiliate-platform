@@ -10,6 +10,13 @@ interface FormState {
 }
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+function RegisterPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formState, setFormState] = useState<FormState | null>(null);
@@ -73,8 +80,6 @@ export default function RegisterPage() {
       }
     });
   };
-
-function RegisterPageInner() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center px-6 py-16">
       <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
@@ -178,5 +183,6 @@ function RegisterPageInner() {
         </p>
       </section>
     </main>
-  );}
+
+  );
 }
