@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -166,5 +166,9 @@ function AffiliatorRegisterPageInner() {
 }
 
 export default function AffiliatorRegisterPage() {
-  return <AffiliatorRegisterPageInner />;
+  return (
+    <Suspense>
+      <AffiliatorRegisterPageInner />
+    </Suspense>
+  );
 }
