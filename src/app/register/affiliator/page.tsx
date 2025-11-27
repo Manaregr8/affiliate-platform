@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, useTransition, ChangeEvent, FormEvent } from "react";
-import { Suspense } from "react";
+
+import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -9,7 +10,7 @@ interface FormState {
   type: "success" | "error" | "info";
 }
 
-export default function RegisterPage() {
+function AffiliatorRegisterPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formState, setFormState] = useState<FormState | null>(null);
@@ -35,36 +36,27 @@ export default function RegisterPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     setFormState({ type: "info", message: "Creating your affiliator account..." });
-
     startTransition(async () => {
       try {
         const response = await fetch("/api/register/affiliator", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formValues),
         });
-
         if (!response.ok) {
           const data = await response.json().catch(() => ({ error: "Unable to register" }));
           throw new Error(typeof data.error === "string" ? data.error : "Unable to register");
         }
-
         setFormState({ type: "success", message: "Account created. Redirecting you to dashboard..." });
-
         const signInResult = await signIn("credentials", {
           redirect: false,
           email: formValues.email,
           password: formValues.password,
         });
-
         if (signInResult?.error) {
           throw new Error("Account created but auto login failed. Please sign in manually.");
         }
-
         router.replace("/dashboard/affiliator");
         router.refresh();
       } catch (error) {
@@ -74,7 +66,6 @@ export default function RegisterPage() {
     });
   };
 
-function RegisterPageInner() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center px-6 py-16">
       <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
@@ -84,7 +75,6 @@ function RegisterPageInner() {
             Create your account to receive a unique coupon code and referral link.
           </p>
         </header>
-
         {formState && (
           <div
             className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
@@ -98,7 +88,6 @@ function RegisterPageInner() {
             {formState.message}
           </div>
         )}
-
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700" htmlFor="name">
@@ -114,7 +103,6 @@ function RegisterPageInner() {
               onChange={updateField("name")}
             />
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700" htmlFor="email">
               Work email
@@ -130,7 +118,6 @@ function RegisterPageInner() {
               onChange={updateField("email")}
             />
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700" htmlFor="password">
               Password
@@ -147,7 +134,6 @@ function RegisterPageInner() {
               onChange={updateField("password")}
             />
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700" htmlFor="superReferral">
               Super affiliator referral code (optional)
@@ -163,7 +149,6 @@ function RegisterPageInner() {
             />
             <p className="text-xs text-gray-500">Use the code shared by your supervising super affiliator.</p>
           </div>
-
           <button
             type="submit"
             disabled={isPending}
@@ -172,11 +157,14 @@ function RegisterPageInner() {
             {isPending ? "Creating account..." : "Create account"}
           </button>
         </form>
-
         <p className="mt-6 text-center text-xs text-gray-500">
           By signing up you agree to receive onboarding emails and payout updates.
         </p>
       </section>
     </main>
-  );}
+  );
+}
+
+export default function AffiliatorRegisterPage() {
+  return <AffiliatorRegisterPageInner />;
 }

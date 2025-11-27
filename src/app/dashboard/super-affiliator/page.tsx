@@ -87,7 +87,7 @@ export default async function SuperAffiliatorDashboardPage() {
       </header>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-  <div className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Override token balance</p>
           <p className="mt-2 text-3xl font-bold text-emerald-600">
             {superAffiliator.tokenBalance.toLocaleString()} tokens
@@ -98,13 +98,11 @@ export default async function SuperAffiliatorDashboardPage() {
         </div>
         <ReferralLinkCard
           referralCode={superAffiliator.referralCode}
-          shareLinkOverride={`http://localhost:3000/register?super=${superAffiliator.referralCode}`}
+          shareLinkOverride={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/register/affiliator?super=${superAffiliator.referralCode}`}
           title="Affiliator signup link"
           helperText="Share this link to onboard new affiliators under your supervision."
         />
-      </div>
-
-      <section className="space-y-3">
+      </div>      <section className="space-y-3">
         <header className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Affiliators under you</h2>
           <span className="text-xs text-gray-500">{affiliators.length} total</span>
@@ -141,7 +139,7 @@ export default async function SuperAffiliatorDashboardPage() {
                     <td className="px-4 py-3 text-gray-700">{affiliate.admittedCount}</td>
                     <td className="px-4 py-3 text-sm text-sky-600">
                       <a
-                        href={`http://localhost:3000/student/${affiliate.referralLink}`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/student/${affiliate.referralLink}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline"

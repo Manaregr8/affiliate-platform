@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { generateUniqueSuperReferralCode } from "@/lib/codes";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const registrationSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -13,7 +14,7 @@ const registrationSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const payload = registrationSchema.parse(await request.json());
     const normalizedEmail = payload.email.trim().toLowerCase();
@@ -63,3 +64,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to register super affiliator" }, { status: 500 });
   }
 }
+
+// Apply rate limiting: 3 super-affiliator registration attempts per 15 minutes per IP
+export const POST = withRateLimit(
+  { maxRequests: 3, windowMs: 15 * 60 * 1000 },
+  handlePOST
+);

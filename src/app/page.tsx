@@ -5,7 +5,7 @@ const sections = [
   {
     title: "Register as an Affiliator",
     description: "Launch your affiliate journey in minutes and start sharing your referral link.",
-    href: "/register",
+    href: "/register/affiliator",
     buttonLabel: "Go to Registration",
     accent: "bg-sky-100 text-sky-600",
   },

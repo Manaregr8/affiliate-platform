@@ -10,7 +10,8 @@ type ReferralLinkCardProps = {
 };
 
 export function ReferralLinkCard({ referralCode, shareLinkOverride, title, helperText }: ReferralLinkCardProps) {
-  const shareLink = shareLinkOverride ?? `http://localhost:3000/student/${referralCode}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const shareLink = shareLinkOverride ?? `${baseUrl}/student/${referralCode}`;
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
