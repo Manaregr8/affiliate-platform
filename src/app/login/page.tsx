@@ -64,10 +64,10 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col justify-center px-6 py-16">
-      <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
+      <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-lg dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
         <header className="mb-6 space-y-2 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Login</h1>
-          <p className="text-sm text-gray-600">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Login</h1>
+          <p className="text-sm text-gray-600 dark:text-slate-300">
             Counsellors and affiliators can access their dashboards from here.
           </p>
         </header>
@@ -76,10 +76,10 @@ export default function LoginPage() {
           <div
             className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
               formState.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100"
                 : formState.type === "error"
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-sky-200 bg-sky-50 text-sky-700"
+                  ? "border-red-200 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100"
+                  : "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100"
             }`}
           >
             {formState.message}
@@ -88,7 +88,7 @@ export default function LoginPage() {
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700" htmlFor="email">
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-200" htmlFor="email">
               Email
             </label>
             <input
@@ -97,7 +97,7 @@ export default function LoginPage() {
               type="email"
               required
               autoComplete="email"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100 dark:placeholder:text-slate-500"
               placeholder="you@example.com"
               value={formValues.email}
               onChange={updateField("email")}
@@ -105,7 +105,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700" htmlFor="password">
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-200" htmlFor="password">
               Password
             </label>
             <input
@@ -115,7 +115,7 @@ export default function LoginPage() {
               minLength={8}
               required
               autoComplete="current-password"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100 dark:placeholder:text-slate-500"
               placeholder="••••••••"
               value={formValues.password}
               onChange={updateField("password")}
@@ -125,14 +125,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-sky-400"
+            className="w-full rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-sky-400 dark:bg-sky-500 dark:hover:bg-sky-400"
           >
             {isPending ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-500">
-          Need an account? <a href="/register" className="font-medium text-sky-600">Register here</a>.
+        <p className="mt-6 text-center text-xs text-gray-500 dark:text-slate-400">
+          Need an account? <a href="/register" className="font-medium text-sky-600 dark:text-sky-300">Register here</a>.
         </p>
       </section>
     </main>
