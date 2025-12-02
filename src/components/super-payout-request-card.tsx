@@ -81,16 +81,16 @@ export function SuperPayoutRequestCard({ tokenBalance }: SuperPayoutRequestCardP
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
       <header className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Request payout</p>
-        <h3 className="text-2xl font-semibold text-gray-900">{tokenBalance.toLocaleString()} override tokens</h3>
-        <p className="text-xs text-gray-500">{helpText}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-300">Request payout</p>
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{tokenBalance.toLocaleString()} override tokens</h3>
+        <p className="text-xs text-gray-500 dark:text-slate-300">{helpText}</p>
       </header>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div className="space-y-1">
-          <label htmlFor="super-payout-amount" className="text-sm font-medium text-gray-700">
+          <label htmlFor="super-payout-amount" className="text-sm font-medium text-gray-700 dark:text-slate-200">
             Payout amount (tokens)
           </label>
           <input
@@ -101,12 +101,12 @@ export function SuperPayoutRequestCard({ tokenBalance }: SuperPayoutRequestCardP
             value={amount}
             onChange={(event) => setAmount(Number(event.target.value))}
             disabled={!hasEnoughTokens || isSubmitting}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100 dark:disabled:bg-slate-800"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="super-payout-reference" className="text-sm font-medium text-gray-700">
+          <label htmlFor="super-payout-reference" className="text-sm font-medium text-gray-700 dark:text-slate-200">
             Enter your UPI ID or payment link
           </label>
           <input
@@ -117,11 +117,11 @@ export function SuperPayoutRequestCard({ tokenBalance }: SuperPayoutRequestCardP
             onChange={(event) => setPayoutReference(event.target.value)}
             placeholder="manjeet@upi or https://"
             disabled={!hasEnoughTokens || isSubmitting}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100 dark:placeholder:text-slate-500 dark:disabled:bg-slate-800"
           />
         </div>
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-red-500 dark:text-red-400">{error}</p> : null}
 
         <button
           type="submit"

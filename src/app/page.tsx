@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Affiliate Growth Command Center",
+  description: "Onboard affiliators, manage referrals, and monitor payouts from a single modern workspace.",
+};
 
 const sections = [
   {
@@ -7,28 +13,28 @@ const sections = [
     description: "Launch your affiliate journey in minutes and start sharing your referral link.",
     href: "/register/affiliator",
     buttonLabel: "Go to Registration",
-    accent: "bg-sky-100 text-sky-600",
+    accent: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-200",
   },
   {
     title: "Become a Super Affiliator",
     description: "Recruit affiliators under you, manage override earnings, and grow your network.",
     href: "/register/super-affiliator",
     buttonLabel: "Build Your Network",
-    accent: "bg-purple-100 text-purple-600",
+    accent: "bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-200",
   },
   {
     title: "Login as Counsellor or Affiliator",
     description: "Access your dashboard to track leads, payouts, and student progress.",
     href: "/login",
     buttonLabel: "Go to Login",
-    accent: "bg-emerald-100 text-emerald-600",
+    accent: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-200",
   },
   {
     title: "Student Registration",
     description: "Join our programs through an affiliator’s coupon code and talk to our counsellors.",
     href: "/student-register",
     buttonLabel: "Register as Student",
-    accent: "bg-amber-100 text-amber-600",
+    accent: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-200",
   },
 ];
 
@@ -55,7 +61,7 @@ const stats = [
 
 export default function Home() {
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-6 py-16 md:px-8">
+    <main className="mx-auto min-h-screen max-w-6xl px-6 py-16 transition-colors md:px-8">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-600 via-indigo-600 to-purple-600 px-6 py-16 text-white shadow-2xl md:px-10">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
@@ -120,18 +126,18 @@ export default function Home() {
         {sections.map((section) => (
           <article
             key={section.title}
-            className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-200 bg-white p-7 shadow-lg transition duration-200 hover:-translate-y-1.5 hover:shadow-2xl"
+            className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-gray-200 bg-white p-7 shadow-lg transition duration-200 hover:-translate-y-1.5 hover:shadow-2xl dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]"
           >
             <div className="flex items-start gap-4">
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${section.accent}`}>Featured</span>
               <div className="space-y-3">
-                <h2 className="text-2xl font-semibold text-gray-900">{section.title}</h2>
-                <p className="text-sm leading-relaxed text-gray-600">{section.description}</p>
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{section.title}</h2>
+                <p className="text-sm leading-relaxed text-gray-600 dark:text-slate-300">{section.description}</p>
               </div>
             </div>
             <Link
               href={section.href}
-              className="mt-8 inline-flex items-center justify-center gap-2 self-start rounded-full bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition group-hover:bg-sky-600"
+              className="mt-8 inline-flex items-center justify-center gap-2 self-start rounded-full bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition group-hover:bg-sky-600 dark:bg-slate-100 dark:text-gray-900 dark:hover:bg-slate-200"
             >
               {section.buttonLabel}
               <span aria-hidden>→</span>
@@ -144,10 +150,10 @@ export default function Home() {
         {highlights.map((item) => (
           <article
             key={item.title}
-            className="rounded-2xl border border-gray-200 bg-slate-50/60 p-6 shadow-sm transition hover:bg-white hover:shadow-md"
+            className="rounded-2xl border border-gray-200 bg-slate-50/60 p-6 shadow-sm transition hover:bg-white hover:shadow-md dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:hover:bg-slate-800"
           >
-            <h3 className="text-base font-semibold text-gray-900">{item.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.description}</p>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{item.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-slate-300">{item.description}</p>
           </article>
         ))}
       </section>

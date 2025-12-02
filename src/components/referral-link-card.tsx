@@ -25,15 +25,15 @@ export function ReferralLinkCard({ referralCode, shareLinkOverride, title, helpe
     }
   }
   return (
-    <div className="h-full w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <div className="h-full w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-200">
         {title ?? "Referral link"}
       </p>
       <a
         href={shareLink}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-2 block w-full break-words text-sm font-semibold text-sky-600 hover:underline"
+        className="mt-2 block w-full break-words text-sm font-semibold text-sky-600 hover:underline dark:text-sky-300"
       >
         {shareLink}
       </a>
@@ -41,12 +41,12 @@ export function ReferralLinkCard({ referralCode, shareLinkOverride, title, helpe
         <button
           type="button"
           onClick={handleCopy}
-          className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-medium transition hover:bg-sky-50
+          className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-medium transition hover:bg-sky-50 dark:hover:bg-slate-800
             ${copied ? "border-emerald-600 text-emerald-600 hover:bg-emerald-50" : "border-sky-600 text-sky-600"}`}
         >
           {copied ? "Copied!" : "Copy link"}
         </button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-slate-300">
           {helperText ?? "Share this direct link to capture student leads."}
         </span>
       </div>

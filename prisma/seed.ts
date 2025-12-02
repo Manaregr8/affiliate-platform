@@ -104,7 +104,7 @@ async function main() {
         phone: "+91 90000 22222",
         course: "Data Science 101",
         affiliatorId: affiliateOne.id,
-        leadStatus: "pending",
+        leadStatus: "processing",
       },
       {
         name: "Karan Student",
@@ -112,7 +112,7 @@ async function main() {
         phone: "+91 90000 33333",
         course: "AI Fundamentals",
         affiliatorId: affiliateTwo.id,
-        leadStatus: "pending",
+        leadStatus: "untouched",
       },
     ],
   });
@@ -129,8 +129,14 @@ async function main() {
       {
         superAffiliatorId: superAffiliator.id,
         amount: 4000,
-        status: "pending",
+        status: "approved",
         qrCodeURL: "https://example.com/pay/super-qr",
+      },
+      {
+        affiliatorId: affiliateTwo.id,
+        amount: 8000,
+        status: "approved",
+        qrCodeURL: "harsh@upi",
       },
     ],
   });

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -5,6 +6,14 @@ import { ReferralLinkCard } from "@/components/referral-link-card";
 import { SuperPayoutRequestCard } from "@/components/super-payout-request-card";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getLeadStatusDisplay } from "@/lib/lead-status";
+import { ReportProblemCard } from "@/components/report-problem-card";
+import { PayoutHistoryCard } from "@/components/payout-history-card";
+
+export const metadata: Metadata = {
+  title: "Super Affiliator Dashboard",
+  description: "Oversee your affiliator network and indirect student leads.",
+};
 
 export default async function SuperAffiliatorDashboardPage() {
   // Enforce server-side access control to the super affiliator workspace.
@@ -34,14 +43,18 @@ export default async function SuperAffiliatorDashboardPage() {
           },
         },
       },
+      payouts: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      },
     },
   });
 
   if (!superAffiliator) {
     return (
       <section className="space-y-4 p-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Super Affiliator Dashboard</h1>
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Super Affiliator Dashboard</h1>
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100">
           We could not locate your super affiliator profile. Please contact support.
         </p>
       </section>
@@ -62,7 +75,7 @@ export default async function SuperAffiliatorDashboardPage() {
         },
       },
     },
-  orderBy: [{ leadStatus: "asc" }, { name: "asc" }],
+    orderBy: [{ leadStatus: "asc" }, { name: "asc" }],
   });
 
   const affiliators = superAffiliator.affiliators.map((affiliate) => ({
@@ -75,24 +88,26 @@ export default async function SuperAffiliatorDashboardPage() {
     referralLink: affiliate.referralLink,
   }));
 
+  const payoutHistory = superAffiliator.payouts ?? [];
+
   return (
     <section className="space-y-8 p-6">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-gray-900">
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
           Welcome back, {superAffiliator.user.name.split(" ")[0]}
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-slate-300">
           Oversee your affiliator network, track indirect leads, and manage override payouts from one place.
         </p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Override token balance</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-600">
+        <div className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-200">Override token balance</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-300">
             {superAffiliator.tokenBalance.toLocaleString()} tokens
           </p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
             Earn 500 tokens for every student admitted through your affiliator network.
           </p>
         </div>
@@ -102,16 +117,18 @@ export default async function SuperAffiliatorDashboardPage() {
           title="Affiliator signup link"
           helperText="Share this link to onboard new affiliators under your supervision."
         />
-      </div>      <section className="space-y-3">
+      </div>
+
+      <section className="space-y-3">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Affiliators under you</h2>
-          <span className="text-xs text-gray-500">{affiliators.length} total</span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Affiliators under you</h2>
+          <span className="text-xs text-gray-500 dark:text-slate-400">{affiliators.length} total</span>
         </header>
 
-        <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[760px] divide-y divide-gray-200 text-left text-sm">
-            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+            <table className="w-full min-w-[760px] divide-y divide-gray-200 text-left text-sm dark:divide-slate-700">
+            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-slate-900 dark:text-slate-300">
               <tr>
                 <th className="px-4 py-3">Affiliator</th>
                 <th className="px-4 py-3">Tokens</th>
@@ -123,21 +140,21 @@ export default async function SuperAffiliatorDashboardPage() {
             <tbody>
               {affiliators.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={5}>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={5}>
                     No affiliators yet. Share your signup link to start building a network.
                   </td>
                 </tr>
               ) : (
                 affiliators.map((affiliate) => (
-                  <tr key={affiliate.id} className="odd:bg-white even:bg-gray-50">
+                  <tr key={affiliate.id} className="odd:bg-white even:bg-gray-50 dark:odd:bg-slate-900 dark:even:bg-slate-800/60">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{affiliate.name}</div>
-                      <div className="text-xs text-gray-500">{affiliate.email}</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{affiliate.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400">{affiliate.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{affiliate.tokenBalance.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-gray-700">{affiliate.leadCount}</td>
-                    <td className="px-4 py-3 text-gray-700">{affiliate.admittedCount}</td>
-                    <td className="px-4 py-3 text-sm text-sky-600">
+                    <td className="px-4 py-3 text-gray-700 dark:text-slate-300">{affiliate.tokenBalance.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-slate-300">{affiliate.leadCount}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-slate-300">{affiliate.admittedCount}</td>
+                    <td className="px-4 py-3 text-sm text-sky-600 dark:text-sky-400">
                       <a
                         href={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/student/${affiliate.referralLink}`}
                         target="_blank"
@@ -158,14 +175,14 @@ export default async function SuperAffiliatorDashboardPage() {
 
       <section className="space-y-3">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Indirect leads</h2>
-          <span className="text-xs text-gray-500">{indirectLeads.length} students</span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Indirect leads</h2>
+          <span className="text-xs text-gray-500 dark:text-slate-400">{indirectLeads.length} students</span>
         </header>
 
-        <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-[rgb(var(--border))] dark:bg-[rgb(var(--surface))]">
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[720px] divide-y divide-gray-200 text-left text-sm">
-            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+            <table className="w-full min-w-[720px] divide-y divide-gray-200 text-left text-sm dark:divide-slate-700">
+            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-slate-900 dark:text-slate-300">
               <tr>
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Course</th>
@@ -176,32 +193,31 @@ export default async function SuperAffiliatorDashboardPage() {
             <tbody>
               {indirectLeads.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={4}>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={4}>
                     Once your affiliators start enrolling students you will track them here.
                   </td>
                 </tr>
               ) : (
                 indirectLeads.map((lead) => (
-                  <tr key={lead.id} className="odd:bg-white even:bg-gray-50">
+                  <tr key={lead.id} className="odd:bg-white even:bg-gray-50 dark:odd:bg-slate-900 dark:even:bg-slate-800/60">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{lead.name}</div>
-                      <div className="text-xs text-gray-500">{lead.email}</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{lead.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400">{lead.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{lead.course}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <div className="font-medium text-gray-900">{lead.affiliator.user.name}</div>
-                      <div className="text-xs text-gray-500">{lead.affiliator.user.email}</div>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.course}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{lead.affiliator.user.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400">{lead.affiliator.user.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                          lead.leadStatus === "admitted"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {lead.leadStatus}
-                      </span>
+                      {(() => {
+                        const display = getLeadStatusDisplay(lead.leadStatus);
+                        return (
+                          <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${display.badgeClass}`}>
+                            {display.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
@@ -214,11 +230,21 @@ export default async function SuperAffiliatorDashboardPage() {
 
       <section className="space-y-3">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Request override payout</h2>
-          <span className="text-xs text-gray-500">Tokens convert to cash upon approval</span>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Request override payout</h2>
+          <span className="text-xs text-gray-500 dark:text-slate-400">Tokens convert to cash upon approval</span>
         </header>
 
         <SuperPayoutRequestCard tokenBalance={superAffiliator.tokenBalance} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent override payouts</h2>
+        <PayoutHistoryCard role="super-affiliator" requests={payoutHistory} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Report an issue</h2>
+        <ReportProblemCard role="super-affiliator" />
       </section>
     </section>
   );

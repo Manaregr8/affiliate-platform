@@ -31,6 +31,8 @@
   CREATE INDEX idx_student_status ON "Student"("leadStatus");
   CREATE INDEX idx_payout_status ON "PayoutRequest"("status");
   CREATE INDEX idx_affiliate_super ON "Affiliate"("superAffiliatorId");
+  CREATE INDEX idx_issue_topic ON "IssueReport"("topic");
+  CREATE INDEX idx_issue_status ON "IssueReport"("status");
   ```
 
 ### 3. Security Hardening
@@ -131,6 +133,7 @@ docker run -p 3000:3000 --env-file .env.production affiliate-platform
 - [ ] Test lead approval by counsellor
 - [ ] Test token distribution
 - [ ] Test payout request flow
+- [ ] Submit issue report from affiliator and super-affiliator dashboards
 - [ ] Verify email notifications work (if configured)
 - [ ] Check all dashboards load correctly
 - [ ] Test on mobile devices
@@ -250,6 +253,6 @@ npx prisma generate
 
 ---
 
-**Last Updated**: November 27, 2025
+**Last Updated**: December 2, 2025
 **Version**: 1.0.0
 **Status**: Ready for Production Testing

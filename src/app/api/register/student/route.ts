@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { STUDENT_COURSE_OPTIONS } from "@/lib/course-options";
+
+const phoneRegex = /^[0-9+()\-\s]{7,15}$/;
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),
-  phone: z.string().min(6, "Phone number is required"),
-  course: z.string().min(1, "Course is required"),
+  phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
+  course: z.enum(STUDENT_COURSE_OPTIONS),
   referralCode: z.string().min(1, "Referral code is required"),
 });
 
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Persist the new student lead entry with pending status.
+    // Persist the new student lead entry with an untouched status.
     const student = await prisma.student.create({
       data: {
         name: payload.name.trim(),

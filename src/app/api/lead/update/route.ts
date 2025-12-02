@@ -5,10 +5,11 @@ import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { LEAD_STATUS_VALUES } from "@/lib/lead-status";
 
 const updateSchema = z.object({
   studentId: z.string().min(1, "studentId is required"),
-  leadStatus: z.enum(["pending", "admitted"] as const),
+  leadStatus: z.enum(LEAD_STATUS_VALUES),
 });
 
 export async function PATCH(request: Request) {

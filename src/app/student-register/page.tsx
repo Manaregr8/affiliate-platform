@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Student Referral Instructions",
+  description: "Students can only enroll through personalized referral links shared by affiliators.",
+};
+
 export default function StudentRegisterPage() {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl flex-col justify-center px-6 py-16">
