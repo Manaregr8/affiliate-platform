@@ -7,6 +7,7 @@ import { SuperPayoutRequestCard } from "@/components/super-payout-request-card";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLeadStatusDisplay } from "@/lib/lead-status";
+import { buildCommissionLookup, formatCourseLabel, getLeadTokens } from "@/lib/course-options";
 import { ReportProblemCard } from "@/components/report-problem-card";
 import { PayoutHistoryCard } from "@/components/payout-history-card";
 
@@ -28,27 +29,37 @@ export default async function SuperAffiliatorDashboardPage() {
   }
 
   // Fetch the supervising account with the affiliators they manage.
-  const superAffiliator = await prisma.superAffiliator.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      user: true,
-      affiliators: {
-        include: {
-          user: true,
-          leads: true,
-        },
-        orderBy: {
-          user: {
-            name: "asc",
+  const [superAffiliator, courseCommissions] = await Promise.all([
+    prisma.superAffiliator.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        user: true,
+        affiliators: {
+          include: {
+            user: true,
+            leads: true,
+          },
+          orderBy: {
+            user: {
+              name: "asc",
+            },
           },
         },
+        payouts: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
       },
-      payouts: {
-        orderBy: { createdAt: "desc" },
-        take: 5,
+    }),
+    prisma.courseCommission.findMany({
+      select: {
+        slug: true,
+        name: true,
+        affiliatorTokens: true,
+        superAffiliatorTokens: true,
       },
-    },
-  });
+    }),
+  ]);
 
   if (!superAffiliator) {
     return (
@@ -89,6 +100,7 @@ export default async function SuperAffiliatorDashboardPage() {
   }));
 
   const payoutHistory = superAffiliator.payouts ?? [];
+  const commissionLookup = buildCommissionLookup(courseCommissions);
 
   return (
     <section className="space-y-8 p-6">
@@ -108,7 +120,7 @@ export default async function SuperAffiliatorDashboardPage() {
             {superAffiliator.tokenBalance.toLocaleString()} tokens
           </p>
           <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
-            Earn 500 tokens for every student admitted through your affiliator network.
+            Tokens now match the confirmed course commissions for each admitted student.
           </p>
         </div>
         <ReferralLinkCard
@@ -187,13 +199,14 @@ export default async function SuperAffiliatorDashboardPage() {
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Course</th>
                 <th className="px-4 py-3">Affiliator</th>
+                <th className="px-4 py-3">Super tokens</th>
                 <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {indirectLeads.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={4}>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={5}>
                     Once your affiliators start enrolling students you will track them here.
                   </td>
                 </tr>
@@ -204,10 +217,21 @@ export default async function SuperAffiliatorDashboardPage() {
                       <div className="font-medium text-gray-900 dark:text-gray-100">{lead.name}</div>
                       <div className="text-xs text-gray-500 dark:text-slate-400">{lead.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.course}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      {formatCourseLabel(lead.courseName, lead.courseCategory)}
+                    </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
                       <div className="font-medium text-gray-900 dark:text-gray-100">{lead.affiliator.user.name}</div>
                       <div className="text-xs text-gray-500 dark:text-slate-400">{lead.affiliator.user.email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      {(() => {
+                        const tokenInfo = getLeadTokens(commissionLookup, lead.courseSlug);
+                        if (!tokenInfo) {
+                          return <span className="text-xs text-amber-600 dark:text-amber-400">Pending course assignment</span>;
+                        }
+                        return <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">{tokenInfo.superAffiliatorTokens.toLocaleString()} tokens</span>;
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       {(() => {

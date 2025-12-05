@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 
+import { COURSE_COMMISSION_DATA } from "./data/course-commissions";
+
 const prisma = new PrismaClient();
 
 // Simple helper to generate deterministic-looking codes for demo data.
@@ -14,7 +16,13 @@ async function main() {
   await prisma.student.deleteMany();
   await prisma.affiliate.deleteMany();
   await prisma.superAffiliator.deleteMany();
+  await prisma.courseCommission.deleteMany();
+  await prisma.issueReport.deleteMany();
   await prisma.user.deleteMany();
+
+  await prisma.courseCommission.createMany({
+    data: COURSE_COMMISSION_DATA,
+  });
 
   const sharedPassword = await hash("Password123!", 10);
 
@@ -94,7 +102,9 @@ async function main() {
         name: "Rahul Student",
         email: "rahul@example.com",
         phone: "+91 90000 11111",
-        course: "Full Stack Bootcamp",
+        courseName: "Fullstack Development",
+        courseCategory: "Web Designing & Development",
+        courseSlug: "fullstack-development",
         affiliatorId: affiliateOne.id,
         leadStatus: "admitted",
       },
@@ -102,7 +112,9 @@ async function main() {
         name: "Sneha Student",
         email: "sneha@example.com",
         phone: "+91 90000 22222",
-        course: "Data Science 101",
+        courseName: "Advanced Certification in Data Analytics and AI",
+        courseCategory: "Data Analytics Courses",
+        courseSlug: "advanced-certification-data-analytics-ai",
         affiliatorId: affiliateOne.id,
         leadStatus: "processing",
       },
@@ -110,7 +122,9 @@ async function main() {
         name: "Karan Student",
         email: "karan@example.com",
         phone: "+91 90000 33333",
-        course: "AI Fundamentals",
+        courseName: "AI Literacy",
+        courseCategory: "Gen AI & Prompt Engineering Courses",
+        courseSlug: "ai-literacy",
         affiliatorId: affiliateTwo.id,
         leadStatus: "untouched",
       },

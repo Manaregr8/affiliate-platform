@@ -9,6 +9,7 @@ import { PayoutHistoryCard } from "@/components/payout-history-card";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLeadStatusDisplay } from "@/lib/lead-status";
+import { buildCommissionLookup, formatCourseLabel, getLeadTokens } from "@/lib/course-options";
 
 export const metadata: Metadata = {
   title: "Affiliator Dashboard",
@@ -26,19 +27,29 @@ export default async function AffiliatorDashboardPage() {
     redirect("/dashboard/counsellor");
   }
 
-  const affiliate = await prisma.affiliate.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      user: true,
-      leads: {
-        orderBy: { name: "asc" },
+  const [affiliate, courseCommissions] = await Promise.all([
+    prisma.affiliate.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        user: true,
+        leads: {
+          orderBy: { name: "asc" },
+        },
+        payouts: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
       },
-      payouts: {
-        orderBy: { createdAt: "desc" },
-        take: 5,
+    }),
+    prisma.courseCommission.findMany({
+      select: {
+        slug: true,
+        name: true,
+        affiliatorTokens: true,
+        superAffiliatorTokens: true,
       },
-    },
-  });
+    }),
+  ]);
 
   if (!affiliate) {
     return (
@@ -56,12 +67,15 @@ export default async function AffiliatorDashboardPage() {
     name: string;
     email: string;
     phone?: string | null;
-    course: string;
+    courseName: string | null;
+    courseCategory: string;
+    courseSlug: string | null;
     leadStatus: string;
   };
 
   const leads = affiliate.leads as AffiliateLead[];
   const payoutRequests = affiliate.payouts ?? [];
+  const commissionLookup = buildCommissionLookup(courseCommissions);
 
   return (
     <section className="space-y-8 p-6">
@@ -105,13 +119,14 @@ export default async function AffiliatorDashboardPage() {
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Course</th>
+                <th className="px-4 py-3">Tokens</th>
                 <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={4}>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={5}>
                     No leads yet. Share your referral link to start earning.
                   </td>
                 </tr>
@@ -123,7 +138,18 @@ export default async function AffiliatorDashboardPage() {
                       <div className="text-xs text-gray-500 dark:text-slate-400">{lead.email}</div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.phone ?? "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.course}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      {formatCourseLabel(lead.courseName, lead.courseCategory)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      {(() => {
+                        const tokenInfo = getLeadTokens(commissionLookup, lead.courseSlug);
+                        if (!tokenInfo) {
+                          return <span className="text-xs text-amber-600 dark:text-amber-400">Pending course assignment</span>;
+                        }
+                        return <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">{tokenInfo.affiliatorTokens.toLocaleString()} tokens</span>;
+                      })()}
+                    </td>
                     <td className="px-4 py-3">
                       {(() => {
                         const statusDisplay = getLeadStatusDisplay(lead.leadStatus);

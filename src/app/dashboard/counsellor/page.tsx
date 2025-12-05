@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 
 import { LeadStatusAction } from "@/components/lead-status-action";
 import { PendingPayouts } from "@/components/pending-payouts";
+import { StudentCourseSelector, type CourseCommissionOption } from "@/components/student-course-selector";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getLeadStatusDisplay } from "@/lib/lead-status";
+import { buildCommissionLookup, getLeadTokens } from "@/lib/course-options";
 
 export const metadata: Metadata = {
   title: "Counsellor Dashboard",
@@ -24,7 +26,8 @@ export default async function CounsellorDashboardPage() {
     redirect("/dashboard/affiliator");
   }
 
-  const leads = await prisma.student.findMany({
+  const [leads, courseOptions] = await Promise.all([
+    prisma.student.findMany({
     orderBy: [{ leadStatus: "asc" }, { name: "asc" }],
     include: {
       affiliator: {
@@ -33,14 +36,27 @@ export default async function CounsellorDashboardPage() {
         },
       },
     },
-  });
+    }),
+    prisma.courseCommission.findMany({
+      orderBy: [{ category: "asc" }, { name: "asc" }],
+      select: {
+        slug: true,
+        name: true,
+        category: true,
+        affiliatorTokens: true,
+        superAffiliatorTokens: true,
+      },
+    }),
+  ]);
 
   type LeadRow = {
     id: string;
     name: string;
     email: string;
     phone: string | null;
-    course: string;
+    courseName: string | null;
+    courseSlug: string | null;
+    courseCategory: string;
     leadStatus: string;
     affiliator: {
       user: {
@@ -51,6 +67,15 @@ export default async function CounsellorDashboardPage() {
   };
 
   const leadRows = leads as LeadRow[];
+  const commissionOptions = courseOptions as CourseCommissionOption[];
+  const commissionLookup = buildCommissionLookup(
+    courseOptions.map((course) => ({
+      slug: course.slug,
+      name: course.name,
+      affiliatorTokens: course.affiliatorTokens,
+      superAffiliatorTokens: course.superAffiliatorTokens,
+    })),
+  );
 
   return (
     <section className="space-y-8 p-6">
@@ -76,6 +101,7 @@ export default async function CounsellorDashboardPage() {
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Course</th>
                 <th className="px-4 py-3">Affiliator</th>
+                <th className="px-4 py-3">Tokens</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Action</th>
               </tr>
@@ -83,7 +109,7 @@ export default async function CounsellorDashboardPage() {
             <tbody>
               {leadRows.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={6}>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-slate-400" colSpan={7}>
                     No leads submitted yet.
                   </td>
                 </tr>
@@ -95,10 +121,44 @@ export default async function CounsellorDashboardPage() {
                       <div className="text-xs text-gray-500 dark:text-slate-400">{lead.email}</div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.phone ?? "—"}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{lead.course}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Interest</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{lead.courseCategory}</p>
+                      </div>
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Confirmed course</p>
+                        <StudentCourseSelector
+                          studentId={lead.id}
+                          courseCategory={lead.courseCategory}
+                          selectedSlug={lead.courseSlug}
+                          courses={commissionOptions}
+                        />
+                        {lead.courseName ? (
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Current: {lead.courseName}</p>
+                        ) : (
+                          <p className="text-xs text-gray-500 dark:text-slate-400">Not assigned yet</p>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
                       <div className="font-medium text-gray-900 dark:text-gray-100">{lead.affiliator.user.name}</div>
                       <div className="text-xs text-gray-500 dark:text-slate-400">{lead.affiliator.user.email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
+                      {(() => {
+                        const tokenInfo = getLeadTokens(commissionLookup, lead.courseSlug);
+                        if (!tokenInfo) {
+                          return <span className="text-xs text-amber-600 dark:text-amber-400">Assign a course to calculate</span>;
+                        }
+
+                        return (
+                          <div className="space-y-1 text-xs">
+                            <p className="text-gray-600 dark:text-slate-300">Affiliator: <span className="font-semibold text-gray-900 dark:text-gray-100">{tokenInfo.affiliatorTokens.toLocaleString()} tokens</span></p>
+                            <p className="text-gray-600 dark:text-slate-300">Super: <span className="font-semibold text-gray-900 dark:text-gray-100">{tokenInfo.superAffiliatorTokens.toLocaleString()} tokens</span></p>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       {(() => {
@@ -111,7 +171,12 @@ export default async function CounsellorDashboardPage() {
                       })()}
                     </td>
                     <td className="px-4 py-3">
-                      <LeadStatusAction studentId={lead.id} currentStatus={lead.leadStatus} />
+                      <LeadStatusAction
+                        studentId={lead.id}
+                        currentStatus={lead.leadStatus}
+                        courseSlug={lead.courseSlug}
+                        requiresCourseSelection
+                      />
                     </td>
                   </tr>
                 ))

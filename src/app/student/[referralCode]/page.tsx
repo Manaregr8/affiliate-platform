@@ -1,9 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-
-import { STUDENT_COURSE_OPTIONS } from "@/lib/course-options";
+import { FormEvent, useEffect, useState } from "react";
 
 type ReferralFormProps = {
   params: {
@@ -15,8 +13,42 @@ export default function StudentReferralPage({ params }: ReferralFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const courseOptions = STUDENT_COURSE_OPTIONS;
+  const [courseCategories, setCourseCategories] = useState<string[]>([]);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const phonePattern = "^[0-9+()\\-\\s]{7,15}$";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchCourseCategories() {
+      try {
+        setCategoryError(null);
+        const response = await fetch("/api/course-commissions");
+        if (!response.ok) {
+          throw new Error("Unable to load courses");
+        }
+        const result = await response.json();
+        if (isMounted) {
+          setCourseCategories(result.categories ?? []);
+        }
+      } catch (fetchError) {
+        if (isMounted) {
+          const message = fetchError instanceof Error ? fetchError.message : "Unable to load courses";
+          setCategoryError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCategories(false);
+        }
+      }
+    }
+
+    fetchCourseCategories();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,7 +68,7 @@ export default function StudentReferralPage({ params }: ReferralFormProps) {
           name: payload.name,
           email: payload.email,
           phone: payload.phone,
-          course: payload.course,
+          courseCategory: payload.courseCategory,
           referralCode: params.referralCode,
         }),
       });
@@ -116,25 +148,29 @@ export default function StudentReferralPage({ params }: ReferralFormProps) {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="course" className="text-sm font-medium text-gray-700 dark:text-slate-200">
-            Course interest
+          <label htmlFor="courseCategory" className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            Course category
           </label>
           <select
-            id="course"
-            name="course"
+            id="courseCategory"
+            name="courseCategory"
             required
             defaultValue=""
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100"
+            disabled={isLoadingCategories || courseCategories.length === 0}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-[rgb(var(--border))] dark:bg-slate-900 dark:text-gray-100"
           >
             <option value="" disabled>
-              Select a course
+              {isLoadingCategories ? "Loading categories..." : "Select a category"}
             </option>
-            {courseOptions.map((course) => (
-              <option key={course} value={course}>
-                {course}
+            {courseCategories.map((category) => (
+              <option key={category} value={category}>
+                {category}
               </option>
             ))}
           </select>
+          {categoryError ? (
+            <p className="text-xs text-red-600 dark:text-red-400">{categoryError}</p>
+          ) : null}
         </div>
 
         {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}

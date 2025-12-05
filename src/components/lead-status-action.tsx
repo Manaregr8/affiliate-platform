@@ -8,6 +8,8 @@ import { LeadStatus, normalizeLeadStatus, getLeadStatusDisplay } from "@/lib/lea
 interface LeadStatusActionProps {
   studentId: string;
   currentStatus: string;
+  courseSlug?: string | null;
+  requiresCourseSelection?: boolean;
 }
 
 const STATUS_TRANSITIONS: Record<LeadStatus, { next?: LeadStatus; cta?: string; buttonClass?: string }> = {
@@ -26,7 +28,7 @@ const STATUS_TRANSITIONS: Record<LeadStatus, { next?: LeadStatus; cta?: string; 
   admitted: {},
 };
 
-export function LeadStatusAction({ studentId, currentStatus }: LeadStatusActionProps) {
+export function LeadStatusAction({ studentId, currentStatus, courseSlug, requiresCourseSelection = false }: LeadStatusActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +40,9 @@ export function LeadStatusAction({ studentId, currentStatus }: LeadStatusActionP
     const meta = getLeadStatusDisplay(normalizedStatus);
     return <span className="text-xs font-semibold text-emerald-500">{meta.label}</span>;
   }
+
+  const needsCourseAssignment =
+    requiresCourseSelection && transition.next === "admitted" && !courseSlug;
 
   const updateStatus = () => {
     setError(null);
@@ -69,7 +74,7 @@ export function LeadStatusAction({ studentId, currentStatus }: LeadStatusActionP
     <div className="flex flex-col gap-2">
       <button
         type="button"
-        disabled={isPending}
+        disabled={isPending || needsCourseAssignment}
         onClick={updateStatus}
         className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-70 ${
           transition.buttonClass ?? "bg-slate-600"
@@ -77,6 +82,9 @@ export function LeadStatusAction({ studentId, currentStatus }: LeadStatusActionP
       >
         {isPending ? "Updating..." : transition.cta ?? "Update"}
       </button>
+      {needsCourseAssignment ? (
+        <span className="text-xs text-amber-600 dark:text-amber-400">Assign a course before admitting.</span>
+      ) : null}
       {error ? <span className="text-xs text-red-600 dark:text-red-400">{error}</span> : null}
     </div>
   );

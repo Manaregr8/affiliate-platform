@@ -40,11 +40,11 @@ export async function PATCH(request: Request) {
       }
 
       if (student.leadStatus === payload.leadStatus) {
-        return { status: 200 as const, student, tokensAwarded: 0 };
+        return { status: 200 as const, student, tokensAwarded: 0, superTokensAwarded: 0 };
       }
 
-  let tokensAwarded = 0;
-  let superTokensAwarded = 0;
+      let tokensAwarded = 0;
+      let superTokensAwarded = 0;
 
       // Update the student status first.
       const updatedStudent = await tx.student.update({
@@ -54,19 +54,31 @@ export async function PATCH(request: Request) {
 
       // Credit tokens only on first transition to admitted.
       if (payload.leadStatus === "admitted" && student.leadStatus !== "admitted") {
+        if (!student.courseSlug) {
+          return { status: 400 as const, error: "Assign a course before admitting the student" };
+        }
+
+        const commission = await tx.courseCommission.findUnique({
+          where: { slug: student.courseSlug },
+        });
+
+        if (!commission) {
+          return { status: 400 as const, error: "Unable to load course commission" };
+        }
+
         await tx.affiliate.update({
           where: { id: student.affiliatorId },
-          data: { tokenBalance: { increment: 4000 } },
+          data: { tokenBalance: { increment: commission.affiliatorTokens } },
         });
-        tokensAwarded = 4000;
+        tokensAwarded = commission.affiliatorTokens;
 
         const relatedSuper = student.affiliator?.superAffiliator;
         if (relatedSuper) {
           await tx.superAffiliator.update({
             where: { id: relatedSuper.id },
-            data: { tokenBalance: { increment: 500 } },
+            data: { tokenBalance: { increment: commission.superAffiliatorTokens } },
           });
-          superTokensAwarded = 500;
+          superTokensAwarded = commission.superAffiliatorTokens;
         }
       }
 
@@ -77,7 +89,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-  return NextResponse.json(result, { status: result.status });
+    return NextResponse.json(result, { status: result.status });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });

@@ -11,6 +11,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model User {
@@ -47,10 +48,28 @@ model Student {
   name         String
   email        String
   phone        String?
-  course       String
+  courseName   String?  @map("course")
+  courseCategory String
+  courseSlug   String?
   affiliatorId String
   leadStatus   String    @default("untouched")
   affiliator   Affiliate @relation(fields: [affiliatorId], references: [id])
+}
+
+model CourseCommission {
+  id                     String   @id @default(cuid())
+  slug                   String   @unique
+  name                   String
+  category               String
+  durationLabel          String
+  actualFees             Int
+  generalDiscountedFees  Int
+  generalDiscountTarget  Int
+  affiliationDiscount    Int
+  affiliatorTokens       Int
+  superAffiliatorTokens  Int
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model PayoutRequest {

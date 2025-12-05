@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { STUDENT_COURSE_OPTIONS } from "@/lib/course-options";
 
 const phoneRegex = /^[0-9+()\-\s]{7,15}$/;
 
@@ -10,7 +9,7 @@ const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),
   phone: z.string().regex(phoneRegex, "Enter a valid phone number"),
-  course: z.enum(STUDENT_COURSE_OPTIONS),
+  courseCategory: z.string().min(1, "Course category is required"),
   referralCode: z.string().min(1, "Referral code is required"),
 });
 
@@ -20,6 +19,7 @@ export async function POST(request: Request) {
     const payload = registerSchema.parse(await request.json());
     const normalizedEmail = payload.email.trim().toLowerCase();
     const normalizedReferralCode = payload.referralCode.trim().toLowerCase();
+    const normalizedCategory = payload.courseCategory.trim();
 
     const affiliate = await prisma.affiliate.findUnique({
       where: {
@@ -31,6 +31,23 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, message: "Invalid referral link" },
         { status: 404 },
+      );
+    }
+
+    const categoryExists = await prisma.courseCommission.findFirst({
+      where: {
+        category: {
+          equals: normalizedCategory,
+          mode: "insensitive",
+        },
+      },
+      select: { category: true },
+    });
+
+    if (!categoryExists) {
+      return NextResponse.json(
+        { success: false, message: "Select a valid course category" },
+        { status: 400 },
       );
     }
 
@@ -52,7 +69,7 @@ export async function POST(request: Request) {
         name: payload.name.trim(),
         email: normalizedEmail,
         phone: payload.phone.trim(),
-        course: payload.course.trim(),
+        courseCategory: categoryExists.category,
         affiliatorId: affiliate.id,
       },
     });
